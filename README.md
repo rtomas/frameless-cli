@@ -18,3 +18,5 @@ public key origin
 
 destitionation public key
 `0000000000000000000000000000000000000000000000000000000000003131`
+
+This proyect is part of an exercise for the Polkadot Blockchain Academy 2023.
