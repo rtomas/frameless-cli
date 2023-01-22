@@ -6,22 +6,11 @@ use sp_core::sr25519;
 use tungstenite::{connect, Message, WebSocket};
 use url::Url;
 use parity_scale_codec::{Decode, Encode};
-use clap::Parser;
 use tungstenite::handshake::client::Response;
 use tungstenite::stream::MaybeTlsStream;
 use std::io::Write;
 use std::net::TcpStream;
 
-#[derive(Parser, Debug)]
-struct Args {
-   /// Name of the person to greet
-   #[arg(short, long)]
-   name: String,
-
-   /// Number of times to greet
-   #[arg(short, long, default_value_t = 1)]
-   count: u8,
-}
 
 type Socket = WebSocket<MaybeTlsStream<TcpStream>>;
 
@@ -42,49 +31,17 @@ fn main() {
     }
 }
 
-
 fn basic_cli(){
     //interative CLI
-    println!("------------------------------------");
-    println!("Choose one of the following options:");
-    println!("1. Mint");
-    println!("2. Transfer");
-    println!("3. Get State");
-    println!("4. Exit CLI");
-    print!("Option: ");
-    std::io::stdout().flush().expect("");
-    let mut option = String::new();
-    std::io::stdin().read_line(&mut option).expect("Failed to read line");
-    let option: u8 = option.trim().parse().expect("Please type a number!");
-    
-    //convert option to selectcall enum
-    let select_call = match option {
-        1 => SelectCall::Mint,
-        2 => SelectCall::Transfer,
-        3 => SelectCall::State,
-        4 => SelectCall::Exit,
-        _ => SelectCall::InvalidOption,
-    };
-
-    match select_call {
+    match get_list_options() {
         SelectCall::Mint => {
             // ask for the key
             println!("--- Mint data ---");
             println!("NOTE: Your destination 'address' would be your public key.");
             println!("");
 
-            print!("Mnemonic of destination key/address : ");
-            std::io::stdout().flush().expect("");
-            let mut key = String::new();
-            std::io::stdin().read_line(&mut key).expect("Failed to read line");
-            let mnemonic: String = key.trim().parse().expect("Please type a string");
-
-            print!("Amount : ");
-            std::io::stdout().flush().expect("");
-            let mut key = String::new();
-            std::io::stdin().read_line(&mut key).expect("Failed to read line");
-
-            let amount: u128 = key.trim().parse().expect("Please type a string");
+            let mnemonic = get_cli_string("Mnemonic of origin key/address : ".to_string());
+            let amount: u128 = get_cli_string("Amount : ".to_string()).trim().parse().expect("Please type a u128 number!");
 
             let pair = get_pair(mnemonic.to_string());
             println!("Your public key is : {:?} ", hex::encode(pair.public().0));
@@ -98,27 +55,11 @@ fn basic_cli(){
             println!("NOTE: Your destination 'address' would be your public key.");
             println!("");
 
-            print!("Mnemonic of origin key/address : ");
-            std::io::stdout().flush().expect("");
-            let mut key = String::new();
-            std::io::stdin().read_line(&mut key).expect("Failed to read line");
-            let mnemonic: String = key.trim().parse().expect("Please type a string");
-
-            print!("Public destination Key (same as Address Destination) : ");
-            std::io::stdout().flush().expect("");
-            let mut key = String::new();
-            std::io::stdin().read_line(&mut key).expect("Failed to read line");
-
-            let public_key: String = key.trim().parse().expect("Please type a string");
-            let public_key_decode = hex::decode(public_key).expect("error on decode");
+            let mnemonic = get_cli_string("Mnemonic of origin key/address : ".to_string());
+            let public_key_decode = get_cli_string_decode("Public destination Key (same as Address Destination) : ".to_string());
             let destination_public_key:[u8;32] = public_key_decode[..].try_into().expect("error on decode");
 
-            print!("Amount : ");
-            std::io::stdout().flush().expect("");
-            let mut key = String::new();
-            std::io::stdin().read_line(&mut key).expect("Failed to read line");
-
-            let amount: u128 = key.trim().parse().expect("Please type a string");
+            let amount: u128 = get_cli_string("Amount : ".to_string()).trim().parse().expect("Please type a u128 number!");
 
             let pair = get_pair(mnemonic.to_string());
             println!("Your public origin key is : {:?} ", hex::encode(pair.public().0.encode()));
@@ -130,13 +71,7 @@ fn basic_cli(){
             // ask for the key}
             println!("--- Get data from state ---");
 
-            print!("Key state : ");
-            std::io::stdout().flush().expect("");
-            let mut key = String::new();
-            std::io::stdin().read_line(&mut key).expect("Failed to read line");
-
-            let key: String = key.trim().parse().expect("Please type a string");
-            let key_decode = hex::decode(key).expect("error on decode");
+            let key_decode = get_cli_string_decode("Key state : ".to_string());
             let value = get_value(&key_decode[..]);
             println!("The value is : {:?}", value);
         },
@@ -151,6 +86,43 @@ fn basic_cli(){
     }
     println!("");
     
+}
+
+
+fn get_list_options()->SelectCall{
+    println!("------------------------------------");
+    println!("Choose one of the following options:");
+    println!("1. Mint");
+    println!("2. Transfer");
+    println!("3. Get State");
+    println!("4. Exit CLI");
+    print!("Option: ");
+    std::io::stdout().flush().expect("");
+    let mut option = String::new();
+    std::io::stdin().read_line(&mut option).expect("Failed to read line");
+    let option = option.trim().parse().expect("Please type a number!");
+
+    //convert option to selectcall enum
+    match option {
+        1 => SelectCall::Mint,
+        2 => SelectCall::Transfer,
+        3 => SelectCall::State,
+        4 => SelectCall::Exit,
+        _ => SelectCall::InvalidOption,
+    }
+}
+
+fn get_cli_string(message: String) -> String{
+    print!("{}", message);
+    std::io::stdout().flush().expect("");
+    let mut key = String::new();
+    std::io::stdin().read_line(&mut key).expect("Failed to read line");
+    return key.trim().parse().expect("Please type a string");
+}
+
+fn get_cli_string_decode(message: String) -> Vec<u8>{
+    let key = get_cli_string(message);
+    hex::decode(key).expect("error on decode")
 }
 
 fn create_socket() -> (Socket, Response){
