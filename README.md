@@ -10,7 +10,9 @@ Choose one of the following options:
 - 3 Get State
 - 4 Exit CLI
 
-mnemonic to test
+### info for testing
+
+mnemonic
 `install victory lazy kiwi actual point chronic drift sphere truly bounce miss`
 
 public key origin
