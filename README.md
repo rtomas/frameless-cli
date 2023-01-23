@@ -21,4 +21,6 @@ public key origin
 destitionation public key
 `0000000000000000000000000000000000000000000000000000000000003131`
 
+![](https://github.com/rtomas/frameless-cli/blob/main/use.gif?raw=true)
+
 This proyect is part of an exercise for the Polkadot Blockchain Academy 2023.
